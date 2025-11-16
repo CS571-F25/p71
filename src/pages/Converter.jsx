@@ -4,7 +4,7 @@ import { BsCurrencyExchange } from 'react-icons/bs';
 import { CurrencyDataContext } from '../contexts/CurrencyDataContext';
 import { Container, Card, Form, Button, Row, Col, Spinner } from 'react-bootstrap';
 
-export default function ConverterPage() {
+export default function Converter() {
   const { liveRates, currencies, getHistoricalRate } = useContext(CurrencyDataContext);
 
   const [amount, setAmount] = useState('100.00');

@@ -3,7 +3,8 @@ import { HashRouter, Routes, Route } from 'react-router';
 import { CurrencyDataProvider } from './contexts/CurrencyDataContext';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
-import ConverterPage from './pages/ConverterPage';
+import Converter from './pages/Converter';
+import HistoricalCharts from './pages/HistoricalCharts';
 
 function App() {
   return (
@@ -12,7 +13,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
-            <Route path="converter" element={<ConverterPage />} />
+            <Route path="converter" element={<Converter />} />
+            <Route path="historical-charts" element={<HistoricalCharts />} />
           </Route>
         </Routes>
       </HashRouter>
