@@ -4,7 +4,7 @@ import { CurrencyDataProvider } from './contexts/CurrencyDataContext';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Converter from './pages/Converter';
-import HistoricalCharts from './pages/HistoricalCharts';
+import History from './pages/History';
 
 function App() {
   return (
@@ -14,7 +14,7 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="converter" element={<Converter />} />
-            <Route path="historical-charts" element={<HistoricalCharts />} />
+            <Route path="historical-charts" element={<History />} />
           </Route>
         </Routes>
       </HashRouter>

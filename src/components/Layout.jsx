@@ -12,7 +12,7 @@ export default function Layout() {
             <Nav className="ms-auto">
               <Nav.Link as={Link} to="/">Dashboard</Nav.Link>
               <Nav.Link as={Link} to="/converter">Converter</Nav.Link>
-              <Nav.Link as={Link} to="/historical-charts">Historical Charts</Nav.Link>
+              <Nav.Link as={Link} to="/historical-charts">History</Nav.Link>
             </Nav>
           </Navbar.Collapse>
         </Container>
