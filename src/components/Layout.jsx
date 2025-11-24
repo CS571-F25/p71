@@ -1,26 +1,26 @@
-import { Outlet, Link } from 'react-router';
-import { Navbar, Nav, Container } from 'react-bootstrap';
+import { Outlet } from 'react-router';
+import AppNavbar from './AppNavbar'; 
 
 export default function Layout() {
   return (
-    <div className='min-vh-100'>
-      <Navbar bg="dark" variant="dark" expand="lg" className="border-bottom border-secondary">
-        <Container fluid>
-          <Navbar.Brand as={Link} to="/">Currency Exchange</Navbar.Brand>
-          <Navbar.Toggle aria-controls="basic-navbar-nav" />
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="ms-auto">
-              <Nav.Link as={Link} to="/">Dashboard</Nav.Link>
-              <Nav.Link as={Link} to="/converter">Converter</Nav.Link>
-              <Nav.Link as={Link} to="/historical-charts">History</Nav.Link>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
-
-      <main>
+    // min-vh-100 ensures the app always fills the height of the screen
+    // d-flex flex-column allows the footer to stick to the bottom
+    <div className="min-vh-100 d-flex flex-column bg-dark text-white">
+      
+      <AppNavbar />
+      
+      {/* Main content grows to fill available space */}
+      <main className="flex-grow-1">
         <Outlet />
       </main>
+      
+      {/* Simple Inline Footer */}
+      <footer className="py-4 mt-auto border-top border-secondary text-center">
+        <small className="text-muted">
+          &copy; {new Date().getFullYear()} Currency Analyst Dashboard. Data provided by Abstract API.
+        </small>
+      </footer>
+      
     </div>
   );
 }
