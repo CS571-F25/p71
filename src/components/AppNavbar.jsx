@@ -10,6 +10,7 @@ export default function AppNavbar() {
     { name: 'Converter', path: '/converter' },
     { name: 'Historical Charts', path: '/history' },
     { name: 'Fluctuation', path: '/fluctuation' },
+    { name: 'Watchlist', path: '/watchlist' },
   ];
 
   return (

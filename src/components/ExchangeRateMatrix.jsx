@@ -1,11 +1,15 @@
 import { useContext } from 'react';
 import { CurrencyDataContext } from '../contexts/CurrencyDataContext';
-import { Card, Table, Spinner } from 'react-bootstrap';
+import { Card, Table, Spinner, Form, Button } from 'react-bootstrap';
+import { FaStar, FaRegStar } from 'react-icons/fa';
 
 export default function ExchangeRateMatrix() {
-  const { liveRates, isLoading } = useContext(CurrencyDataContext); 
-
+  const { liveRates, isLoading, watchlist, toggleWatchlist } = useContext(CurrencyDataContext);
   const mainCurrencies = ['USD', 'EUR', 'JPY', 'GBP', 'CAD', 'AUD'];
+
+  const isWatched = (base, target) => {
+    return watchlist.some(item => item.base === base && item.target === target);
+  };
 
   return (
     <Card bg="dark" text="white" className="border-secondary shadow h-100">
@@ -18,7 +22,7 @@ export default function ExchangeRateMatrix() {
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <Table bordered hover variant="dark" size="sm" responsive>
+            <Table bordered hover variant="dark" size="sm" responsive className="align-middle">
               <thead>
                 <tr>
                   <th style={{ backgroundColor: '#1e293b' }}>From / To</th>
@@ -29,7 +33,6 @@ export default function ExchangeRateMatrix() {
                   ))}
                 </tr>
               </thead>
-              
               <tbody>
                 {mainCurrencies.map((fromCurr) => (
                   <tr key={fromCurr}>
@@ -39,16 +42,33 @@ export default function ExchangeRateMatrix() {
                     {mainCurrencies.map((toCurr) => {
                       const rate = liveRates ? (liveRates[fromCurr]?.[toCurr] || 1) : 0;
                       const isBase = fromCurr === toCurr;
+                      
+                      // Check if this specific pair is in the watchlist
+                      const watched = isWatched(fromCurr, toCurr);
+
                       return (
                         <td
                           key={toCurr}
-                          className="text-center"
+                          className="text-center position-relative"
                           style={{
                             backgroundColor: isBase ? '#1e3a5f' : '#334155',
                             fontWeight: isBase ? 'bold' : 'normal',
                           }}
                         >
                           {rate.toFixed(4)}
+                          
+                          {/* Add Star Button (Only if not base currency) */}
+                          {!isBase && (
+                            <Button
+                              variant="link"
+                              className="p-0 ms-2 text-warning position-absolute top-50 end-0 translate-middle-y me-1"
+                              style={{ opacity: watched ? 1 : 0.3 }}
+                              onClick={() => toggleWatchlist(fromCurr, toCurr)}
+                              title={watched ? "Remove from Watchlist" : "Add to Watchlist"}
+                            >
+                              {watched ? <FaStar size={10} /> : <FaRegStar size={10} />}
+                            </Button>
+                          )}
                         </td>
                       );
                     })}

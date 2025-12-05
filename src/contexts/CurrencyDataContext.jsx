@@ -8,7 +8,6 @@ const API_URL = 'https://exchange-rates.abstractapi.com/v1';
 const buildRateMatrix = (baseRates, mainCurrencies) => {
   const matrix = {};
   const usdRates = baseRates; 
-  
   for (const fromCurr of mainCurrencies) {
     matrix[fromCurr] = {};
     for (const toCurr of mainCurrencies) {
@@ -23,9 +22,34 @@ export function CurrencyDataProvider({ children }) {
   const [liveRates, setLiveRates] = useState(null); 
   const [historicalCache, setHistoricalCache] = useState({});
   const [isLoading, setIsLoading] = useState(true);
+  const [watchlist, setWatchlist] = useState(() => {
+    const saved = localStorage.getItem('currency-watchlist');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const currencies = ['USD', 'EUR', 'JPY', 'GBP', 'CAD', 'AUD', 'CHF', 'CNY', 'INR'];
   const mainCurrencies = ['USD', 'EUR', 'JPY', 'GBP', 'CAD', 'AUD'];
+
+  useEffect(() => {
+    localStorage.setItem('currency-watchlist', JSON.stringify(watchlist));
+  }, [watchlist]);
+
+  const toggleWatchlist = (base, target) => {
+    setWatchlist(prev => {
+      const exists = prev.find(item => item.base === base && item.target === target);
+      if (exists) {
+        return prev.filter(item => item.base !== base || item.target !== target);
+      } else {
+        return [...prev, { id: `${base}-${target}`, base, target, note: '' }];
+      }
+    });
+  };
+
+  const updateWatchlistNote = (base, target, note) => {
+    setWatchlist(prev => prev.map(item => 
+      (item.base === base && item.target === target) ? { ...item, note } : item
+    ));
+  };
 
   useEffect(() => {
     const fetchLiveRates = async () => {
@@ -33,32 +57,25 @@ export function CurrencyDataProvider({ children }) {
         const response = await fetch(`${API_URL}/live?api_key=${API_KEY}&base=USD`);
         const data = await response.json();
         const ratesFromApi = data.exchange_rates;
-        ratesFromApi.USD = 1.0;
-        const rateMatrix = buildRateMatrix(data.exchange_rates, mainCurrencies);
+        ratesFromApi.USD = 1.0; 
+        const rateMatrix = buildRateMatrix(ratesFromApi, mainCurrencies);
         setLiveRates(rateMatrix);
-        
       } catch (error) {
         console.error("Failed to fetch live rates:", error);
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchLiveRates();
   }, []);
 
-
   const getHistoricalRate = useCallback(async (date, base, target) => {
     const cacheKey = `${date}-${base}-${target}`;
-    
-    if (historicalCache[cacheKey]) {
-      return historicalCache[cacheKey];
-    }
+    if (historicalCache[cacheKey]) return historicalCache[cacheKey];
 
     try {
       const response = await fetch(`${API_URL}/convert?api_key=${API_KEY}&base=${base}&target=${target}&date=${date}&base_amount=1`);
       const data = await response.json();
-
       if (data.exchange_rate) {
         const rate = data.exchange_rate;
         setHistoricalCache(prev => ({ ...prev, [cacheKey]: rate }));
@@ -66,7 +83,7 @@ export function CurrencyDataProvider({ children }) {
       }
     } catch (error) {
       console.error("Failed to fetch historical rate:", error);
-      return null;
+      return null; 
     }
   }, [historicalCache]);
 
@@ -75,6 +92,9 @@ export function CurrencyDataProvider({ children }) {
     currencies,
     getHistoricalRate,
     isLoading,
+    watchlist,
+    toggleWatchlist,
+    updateWatchlistNote
   };
 
   return (

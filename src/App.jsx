@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Converter from './pages/Converter'; 
 import History from './pages/History'; 
 import Fluctuation from './pages/Fluctuation'; 
+import Watchlist from './components/Watchlist';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
             <Route path="converter" element={<Converter />} />            
             <Route path="history" element={<History />} />            
             <Route path="fluctuation" element={<Fluctuation />} />
+            <Route path="watchlist" element={<Watchlist />} />
             
           </Route>
         </Routes>
