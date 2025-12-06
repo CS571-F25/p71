@@ -6,7 +6,7 @@ import Dashboard from './pages/Dashboard';
 import Converter from './pages/Converter'; 
 import History from './pages/History'; 
 import Fluctuation from './pages/Fluctuation'; 
-import Watchlist from './components/Watchlist';
+import Watchlist from './pages/Watchlist';
 
 function App() {
   return (

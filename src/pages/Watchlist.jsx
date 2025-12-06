@@ -1,14 +1,34 @@
 import React, { useContext } from 'react';
 import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 import { CurrencyDataContext } from '../contexts/CurrencyDataContext';
-import { BsTrash, BsJournalText } from 'react-icons/bs';
+import { BsTrash, BsJournalText, BsPersonLock } from 'react-icons/bs';
 
 export default function Watchlist() {
-  const { watchlist, liveRates, toggleWatchlist, updateWatchlistNote } = useContext(CurrencyDataContext);
+  const { watchlist, liveRates, toggleWatchlist, updateWatchlistNote, user } = useContext(CurrencyDataContext);
+
+  if (!user) {
+    return (
+      <Container fluid className="px-4 py-5">
+        <h2 className="text-white mb-4">My Watchlist</h2>
+        <Card bg="dark" text="white" className="border-secondary shadow text-center py-5">
+          <Card.Body>
+            <BsPersonLock size={48} className="text-muted mb-3" />
+            <h4>Sign In Required</h4>
+            <p className="text-muted">
+              Please sign in using the button in the navigation bar to access and save your personal watchlist.
+            </p>
+          </Card.Body>
+        </Card>
+      </Container>
+    );
+  }
+
+  // Fallback if displayName is null
+  const displayName = user.displayName || user.email.split('@')[0];
 
   return (
     <Container fluid className="px-4 py-5">
-      <h2 className="text-white mb-4">My Watchlist</h2>
+      <h2 className="text-white mb-4">{displayName}'s Watchlist</h2>
 
       {watchlist.length === 0 ? (
         <div className="text-center py-5 text-muted">
@@ -26,7 +46,7 @@ export default function Watchlist() {
               <Col key={item.id} md={6} lg={4}>
                 <Card bg="dark" text="white" className="border-secondary shadow-sm h-100">
                   <Card.Header className="d-flex justify-content-between align-items-center border-secondary">
-                    <span className="fw-bold fs-5">{item.base} to {item.target}</span>
+                    <span className="fw-bold fs-5">{item.base} / {item.target}</span>
                     <Button 
                       variant="link" 
                       className="text-danger p-0" 
@@ -44,7 +64,7 @@ export default function Watchlist() {
                     <Form.Group>
                       <Form.Label className="text-muted small d-flex align-items-center gap-2">
                         <BsJournalText /> Your Notes
-                      </Form.Label>                      
+                      </Form.Label>
                       <Form.Control 
                         as="textarea" 
                         rows={2}
@@ -55,11 +75,10 @@ export default function Watchlist() {
                         data-bs-theme="dark"
                         style={{ 
                           resize: 'none', 
-                          backgroundColor: '#1a1d20',
+                          backgroundColor: '#1a1d20', 
                           color: '#e9ecef'
                         }}
                       />
-
                     </Form.Group>
                   </Card.Body>
                 </Card>
