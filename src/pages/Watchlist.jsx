@@ -46,7 +46,7 @@ export default function Watchlist() {
               <Col key={item.id} md={6} lg={4}>
                 <Card bg="dark" text="white" className="border-secondary shadow-sm h-100">
                   <Card.Header className="d-flex justify-content-between align-items-center border-secondary">
-                    <span className="fw-bold fs-5">{item.base} / {item.target}</span>
+                    <span className="fw-bold fs-5">{item.base} to {item.target}</span>
                     <Button 
                       variant="link" 
                       className="text-danger p-0" 

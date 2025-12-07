@@ -14,7 +14,7 @@ export default function ExchangeRateMatrix() {
   return (
     <Card bg="dark" text="white" className="border-secondary shadow h-100">
       <Card.Body>
-        <Card.Title className="mb-4">Exchange Rate Matrix</Card.Title>
+        <Card.Title className="mb-4">Top Currency Exchange Rate</Card.Title>
 
         {isLoading ? (
           <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '200px' }}>

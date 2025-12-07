@@ -197,7 +197,7 @@ export function CurrencyDataProvider({ children }) {
       const newsData = await newsResponse.json();
       
       if (!newsData.articles || newsData.articles.length === 0) {
-        return { sentiment: 'Neutral', summary: 'No recent news found to analyze.' };
+        return { sentiment: 'Neutral', summary: 'No recent news found to analyze.', articles: [] };
       }
 
       const headlines = newsData.articles.map(a => `- ${a.title}`).join('\n');
@@ -227,9 +227,14 @@ export function CurrencyDataProvider({ children }) {
       const jsonText = text.replace(/```json|```/g, '').trim();
       const analysis = JSON.parse(jsonText);
 
-      setAiCache(prev => ({ ...prev, [cacheKey]: analysis }));
+      const finalResult = {
+        ...analysis,
+        articles: newsData.articles
+      }
+
+      setAiCache(prev => ({ ...prev, [cacheKey]: finalResult }));
       
-      return analysis;
+      return finalResult;
 
     } catch (error) {
       console.error("AI Analysis failed:", error);
