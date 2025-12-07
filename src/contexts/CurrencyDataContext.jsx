@@ -44,7 +44,8 @@ export function CurrencyDataProvider({ children }) {
   const [user, setUser] = useState(null);
   const [watchlist, setWatchlist] = useState([]);
   const [aiCache, setAiCache] = useState({});
-
+  
+  // Make sure to export mainCurrencies so the AIInsights component can use them if needed
   const currencies = ['USD', 'EUR', 'JPY', 'GBP', 'CAD', 'AUD', 'CHF', 'CNY', 'INR'];
   const mainCurrencies = ['USD', 'EUR', 'JPY', 'GBP', 'CAD', 'AUD'];
 
@@ -134,7 +135,10 @@ export function CurrencyDataProvider({ children }) {
   // --- API ACTIONS ---
   useEffect(() => {
     const fetchLiveRates = async () => {
-      if (!API_KEY) return; 
+      if (!API_KEY) {
+        setIsLoading(false); // Stop loading if no key
+        return; 
+      }
       try {
         const response = await fetch(`${API_URL}/live?api_key=${API_KEY}&base=USD`);
         const data = await response.json();
@@ -173,7 +177,7 @@ export function CurrencyDataProvider({ children }) {
     }
   }, [historicalCache]);
 
-  // --- CHANGE 2: Updated AI Function ---
+  // --- UPDATED AI FUNCTION WITH CORS FIX ---
   const fetchAIInsights = useCallback(async (currency) => {
     if (!GEMINI_KEY || !GNEWS_KEY) {
       console.warn("Missing AI API Keys");
@@ -188,12 +192,14 @@ export function CurrencyDataProvider({ children }) {
     }
 
     try {
-      // A. Fetch News (GNews)
-      const newsResponse = await fetch(
-        `https://gnews.io/api/v4/search?q=${currency}+AND+(currency+OR+economy)&lang=en&max=5&sortby=publishedAt&apikey=${GNEWS_KEY}`
-      );
+      // A. Fetch News (GNews) with CORS Proxy
+      // 1. Construct the GNews URL
+      const gnewsUrl = `https://gnews.io/api/v4/search?q=${currency}+AND+(currency+OR+economy)&lang=en&max=5&sortby=publishedAt&apikey=${GNEWS_KEY}`;
       
-      if (!newsResponse.ok) throw new Error("GNews API Error");
+      // 2. Wrap it in corsproxy.io to bypass GitHub Pages CORS restriction
+      const newsResponse = await fetch(`https://corsproxy.io/?${encodeURIComponent(gnewsUrl)}`);
+      
+      if (!newsResponse.ok) throw new Error("GNews API Error via Proxy");
       const newsData = await newsResponse.json();
       
       if (!newsData.articles || newsData.articles.length === 0) {
@@ -221,16 +227,16 @@ export function CurrencyDataProvider({ children }) {
       // Generate content
       const result = await model.generateContent(prompt);
       const response = await result.response;
-      const text = response.text(); // text() is a function in this SDK
+      const text = response.text(); 
       
-      // Clean up the JSON string (Gemini sometimes adds markdown blocks)
+      // Clean up the JSON string
       const jsonText = text.replace(/```json|```/g, '').trim();
       const analysis = JSON.parse(jsonText);
 
       const finalResult = {
         ...analysis,
         articles: newsData.articles
-      }
+      };
 
       setAiCache(prev => ({ ...prev, [cacheKey]: finalResult }));
       
@@ -245,6 +251,7 @@ export function CurrencyDataProvider({ children }) {
   const value = {
     liveRates,
     currencies,
+    mainCurrencies,
     getHistoricalRate,
     fetchAIInsights, 
     isLoading,
