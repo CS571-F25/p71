@@ -9,7 +9,7 @@ export default function Watchlist() {
   if (!user) {
     return (
       <Container fluid className="px-4 py-5">
-        <h2 className="text-white mb-4">My Watchlist</h2>
+        <h1 className="text-white mb-4">My Watchlist</h1>
         <Card bg="dark" text="white" className="border-secondary shadow text-center py-5">
           <Card.Body>
             <BsPersonLock size={48} className="text-muted mb-3" />
@@ -28,7 +28,7 @@ export default function Watchlist() {
 
   return (
     <Container fluid className="px-4 py-5">
-      <h2 className="text-white mb-4">{displayName}'s Watchlist</h2>
+      <h1 className="text-white mb-4">{displayName}'s Watchlist</h1>
 
       {watchlist.length === 0 ? (
         <div className="text-center py-5 text-muted">

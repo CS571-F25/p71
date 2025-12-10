@@ -52,9 +52,11 @@ export default function Converter() {
   const handleFromChange = (value) => setFromCurrency(value);
   const handleToChange = (value) => setToCurrency(value);
 
+  const isReady = liveRates && Object.keys(liveRates).length > 0;
+
   return (
     <Container className="py-4" style={{ maxWidth: '900px' }}>
-      <h2 className="mb-4 text-white">Currency Converter</h2>
+      <h1 className="mb-4 text-white">Currency Converter</h1>
 
       <Card bg="dark" text="white" className="border-secondary shadow">
         <Card.Body>
@@ -96,6 +98,7 @@ export default function Converter() {
                   <Form.Select
                     value={fromCurrency}
                     onChange={(e) => handleFromChange(e.target.value)}
+                    disabled={!isReady}
                     style={{ backgroundColor: '#334155', color: 'white', borderColor: '#475569' }}
                   >
                     {currencies.map((curr) => (
@@ -109,6 +112,7 @@ export default function Converter() {
                 <Button
                   variant="primary"
                   onClick={handleSwap}
+                  disabled={!isReady}
                   className="rounded"
                 >
                   <ArrowLeftRight size={20} />
@@ -121,6 +125,7 @@ export default function Converter() {
                   <Form.Select
                     value={toCurrency}
                     onChange={(e) => handleToChange(e.target.value)}
+                    disabled={!isReady}
                     style={{ backgroundColor: '#334155', color: 'white', borderColor: '#475569' }}
                   >
                     {currencies.map((curr) => (

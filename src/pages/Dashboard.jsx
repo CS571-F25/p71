@@ -29,7 +29,7 @@ export default function Dashboard() {
       {/* --- Page Header --- */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h2 className="text-white mb-0">Welcome back, {getUserName()}</h2>
+          <h1 className="text-white mb-0">Welcome back, {getUserName()}</h1>
           <p className="text-muted small mb-0">Here is your market overview for today.</p>
         </div>
         <div className="d-none d-md-block text-end text-muted small">

@@ -4,7 +4,7 @@ import { Container, Row, Col } from 'react-bootstrap';
 export default function History() {
   return (
     <Container fluid className="px-4 py-5">
-      <h2 className="text-white mb-4">History</h2>
+      <h1 className="text-white mb-4">History</h1>
       <Row>
         <Col>
           <HistoricalStats />

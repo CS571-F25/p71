@@ -125,10 +125,9 @@ export default function AIInsights() {
                         </div>
                         <div>
                             <div className="text-uppercase small fw-bold text-info" style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>AI Sentiment</div>
-                            <h2 className="mb-0 fw-bold text-white">{config.label}</h2>
+                            <h1 className="mb-0 fw-bold text-white">{config.label}</h1>
                         </div>
                     </div>
-                    <Badge bg="dark" className="text-info border border-info bg-opacity-75 p-2"><BsRobot className="me-1"/> Gemini 2.5</Badge>
                  </div>
 
                  {/* Analysis Text Box */}

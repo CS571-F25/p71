@@ -7,22 +7,31 @@ export default function TrendIndicator({ value, period }) {
   const isPositive = value > 0;
   const isNeutral = value === 0;
   const absoluteValue = Math.abs(value).toFixed(2);
-  let colorClass = 'text-muted';
+  
+  // IMPROVEMENT: Use 'text-white' mixed with color classes for better contrast in dark mode
+  let colorClass = 'text-secondary';
   let Icon = BsDash;
+  let label = "Neutral trend";
 
   if (isPositive) {
-    colorClass = 'text-success';
+    colorClass = 'text-success'; // Ensure this green is bright enough (e.g., #22c55e)
     Icon = BsArrowUp;
+    label = "Trending up";
   } else if (!isNeutral) {
-    colorClass = 'text-danger';
+    colorClass = 'text-danger'; // Ensure this red is bright enough (e.g., #ef4444)
     Icon = BsArrowDown;
+    label = "Trending down";
   }
 
   return (
-    <span className={`${colorClass} d-inline-flex align-items-center gap-1 fw-medium`}>
-      <Icon size={12} />
+    <span 
+      className={`${colorClass} d-inline-flex align-items-center gap-1 fw-medium`}
+      aria-label={`${label}: ${absoluteValue}%`} // Accessibility Fix
+      title={`${label}: ${absoluteValue}%`}
+    >
+      <Icon size={16} strokeWidth={0.5} /> 
       {absoluteValue}%
-      {period && <span className="text-muted ms-1 small">({period})</span>}
+      {period && <span className="text-white-50 ms-1 small">({period})</span>}
     </span>
   );
 }

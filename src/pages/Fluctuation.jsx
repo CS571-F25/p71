@@ -82,7 +82,7 @@ function Fluctuation() {
     <Container fluid className="px-4 py-5">
       <div className="d-flex align-items-center gap-3 mb-4">
         <IoAnalyticsSharp className="text-primary" size={28} />
-        <h2 className="text-white mb-0">Currency Fluctuation Analysis</h2>
+        <h1 className="text-white mb-0">Currency Fluctuation Analysis</h1>
       </div>
 
       <Row className="mb-4">

@@ -59,16 +59,27 @@ export default function ExchangeRateMatrix() {
                           
                           {/* Add Star Button (Only if not base currency) */}
                           {!isBase && (
-                            <Button
-                              variant="link"
-                              className="p-0 ms-2 text-warning position-absolute top-50 end-0 translate-middle-y me-1"
-                              style={{ opacity: watched ? 1 : 0.3 }}
-                              onClick={() => toggleWatchlist(fromCurr, toCurr)}
-                              title={watched ? "Remove from Watchlist" : "Add to Watchlist"}
-                            >
-                              {watched ? <FaStar size={10} /> : <FaRegStar size={10} />}
-                            </Button>
-                          )}
+                          <Button
+                            variant="link"
+                            // IMPROVEMENT: Removed 'p-0' to give it padding (hit area). 
+                            // Increased perceptible affordance with larger size.
+                            className="text-warning position-absolute top-50 end-0 translate-middle-y me-1 d-flex align-items-center justify-content-center"
+                            style={{ 
+                              opacity: watched ? 1 : 0.2, 
+                              width: '32px',   // Explicit touch target size
+                              height: '32px', 
+                            }}
+                            // Add hover effect via inline style or CSS class
+                            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-50%) scale(1.2)'; e.currentTarget.style.opacity = '1'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(-50%) scale(1)'; e.currentTarget.style.opacity = watched ? '1' : '0.2'; }}
+                            onClick={() => toggleWatchlist(fromCurr, toCurr)}
+                            title={watched ? "Remove from Watchlist" : "Add to Watchlist"}
+                            aria-label={watched ? `Stop watching ${fromCurr} to ${toCurr}` : `Watch ${fromCurr} to ${toCurr}`}
+                          >
+                            {/* Increased icon size from 10 to 14 for better visibility */}
+                            {watched ? <FaStar size={14} /> : <FaRegStar size={14} />}
+                          </Button>
+                        )}
                         </td>
                       );
                     })}
