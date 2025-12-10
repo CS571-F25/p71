@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext, useMemo, useRef } from 'react';
 import { BsGraphUp } from 'react-icons/bs';
 import React from 'react';
-import { Card, Form, Button, ButtonGroup, Row, Col, Table } from 'react-bootstrap';
+import { Card, Form, Button, ButtonGroup, Row, Col, Table, Alert } from 'react-bootstrap';
 import { CurrencyDataContext } from '../contexts/CurrencyDataContext';
 import Loader from './Loader';
 import TrendIndicator from './TrendIndicator';
@@ -74,7 +74,7 @@ function HistoricalStats() {
   const [chartData, setChartData] = useState({ labels: [], rates: [] });
   const [isLoading, setIsLoading] = useState(false);  
   const [isChartReady, setIsChartReady] = useState(false);
-  
+  const [showTip, setShowTip] = useState(true);
   const chartRef = useRef(null);
   const COLOR_PRIMARY = '#0d6efd';
   const COLOR_SECONDARY = '#6c757d';
@@ -82,9 +82,10 @@ function HistoricalStats() {
   // --- 1. Main Data Fetching Logic ---
   useEffect(() => {
     let isCancelled = false;
+    
     const fetchData = async () => {
       setIsLoading(true);
-      setIsChartReady(false); 
+      setIsChartReady(false);
       setChartData({ labels: [], rates: [] });
 
       if (!getHistoricalRate) {
@@ -93,17 +94,34 @@ function HistoricalStats() {
       }
 
       const datesToFetch = getDatesForRange(timeRange);
-      const promises = datesToFetch.map(date =>
-        getHistoricalRate(date, fromCurrency, toCurrency)
-      );
+      const rates = [];
 
-      const rates = await Promise.all(promises);
+      // --- CHANGE: Use a loop instead of Promise.all ---
+      for (const date of datesToFetch) {
+        if (isCancelled) return;
+
+        try {
+          // Fetch one rate
+          const rate = await getHistoricalRate(date, fromCurrency, toCurrency);
+          rates.push(rate);
+
+          // Wait 1.1 seconds before the next request to respect API limits
+          // (AbstractAPI free tier is usually 1 request per second)
+          if (datesToFetch.indexOf(date) !== datesToFetch.length - 1) {
+             await delay(1100); 
+          }
+        } catch (error) {
+          console.error(`Failed to fetch for ${date}`, error);
+          rates.push(null); // Push null so we keep the index alignment
+        }
+      }
 
       if (isCancelled) return;
 
       const formattedLabels = datesToFetch.map(date =>
         new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
       );
+
       const formattedRates = rates.map(rate => {
         const val = parseFloat(rate);
         return isNaN(val) ? null : val;
@@ -115,7 +133,6 @@ function HistoricalStats() {
     fetchData();
     return () => { isCancelled = true; };
   }, [fromCurrency, toCurrency, timeRange, getHistoricalRate]);
-
 
   // --- 2. Background Prefetch Logic ---
   useEffect(() => {
@@ -135,7 +152,7 @@ function HistoricalStats() {
       for (const date of allDates) {
         if (isCancelled) break;
         await getHistoricalRate(date, fromCurrency, toCurrency);
-        await delay(500); // Small delay between background requests
+        await delay(1200); // Small delay between background requests
       }
     };
 
@@ -231,9 +248,18 @@ function HistoricalStats() {
           <BsGraphUp className="text-primary" size={20} />
           <span>Historical Analysis</span>
         </Card.Title>
-        <Card.Subtitle className="mb-4 mt-2 text-muted">
+        <Card.Subtitle className="mb-4 mt-2 text-white">
           Analyze exchange rate trends and volatility over time.
         </Card.Subtitle>
+
+        {showTip && (
+          <Alert variant="info" onClose={() => setShowTip(false)} dismissible className="mb-4 border-info">
+            <div className="d-flex align-items-center gap-2 small">
+              <strong>System Notice: Data loading may be slower than usual due to API rate limiting. </strong>
+              <span>We are working on caching improvements for the next release to speed this up.</span>
+            </div>
+          </Alert>
+        )}
 
         {/* CONTROLS */}
         <div className="d-flex flex-wrap gap-3 mb-4 align-items-end">
@@ -245,7 +271,7 @@ function HistoricalStats() {
             >
               {currencies.map(c => <option key={c} value={c}>{c}</option>)}
             </Form.Select>
-            <span className="text-muted">/</span>
+            <span className="text">to</span>
             <Form.Select 
               value={toCurrency} 
               onChange={(e) => setToCurrency(e.target.value)} 
