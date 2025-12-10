@@ -14,13 +14,12 @@ import {
   arrayUnion, 
 } from "firebase/firestore";
 import { auth, db } from '../firebase';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Sentiment from 'sentiment';
 
 export const CurrencyDataContext = createContext();
 
 const API_KEY = import.meta.env.VITE_ABSTRACT_API_KEY;
 const API_URL = 'https://exchange-rates.abstractapi.com/v1';
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const GNEWS_KEY = import.meta.env.VITE_GNEWS_API_KEY;
 
 // Helper: Build the nested rate matrix
@@ -44,8 +43,7 @@ export function CurrencyDataProvider({ children }) {
   const [user, setUser] = useState(null);
   const [watchlist, setWatchlist] = useState([]);
   const [aiCache, setAiCache] = useState({});
-  
-  // Make sure to export mainCurrencies so the AIInsights component can use them if needed
+
   const currencies = ['USD', 'EUR', 'JPY', 'GBP', 'CAD', 'AUD', 'CHF', 'CNY', 'INR'];
   const mainCurrencies = ['USD', 'EUR', 'JPY', 'GBP', 'CAD', 'AUD'];
 
@@ -136,7 +134,7 @@ export function CurrencyDataProvider({ children }) {
   useEffect(() => {
     const fetchLiveRates = async () => {
       if (!API_KEY) {
-        setIsLoading(false); // Stop loading if no key
+        setIsLoading(false);
         return; 
       }
       try {
@@ -177,64 +175,81 @@ export function CurrencyDataProvider({ children }) {
     }
   }, [historicalCache]);
 
-  // --- UPDATED AI FUNCTION WITH CORS FIX ---
+  // --- NEW LOCAL SENTIMENT FUNCTION ---
   const fetchAIInsights = useCallback(async (currency) => {
-    if (!GEMINI_KEY || !GNEWS_KEY) {
-      console.warn("Missing AI API Keys");
-      return { sentiment: 'Unavailable', summary: 'API Keys missing. Please check .env file.' };
-    }
-
     const today = new Date().toISOString().split('T')[0];
     const cacheKey = `${currency}-${today}`;
     
-    if (aiCache[cacheKey]) {
-      return aiCache[cacheKey];
+    if (aiCache[cacheKey]) return aiCache[cacheKey];
+
+    if (!GNEWS_KEY) {
+       console.warn("Missing GNews Key");
+       return { sentiment: 'Unavailable', summary: 'GNews API Key is missing.' };
     }
 
     try {
-      // A. Fetch News (GNews) with CORS Proxy
-      // 1. Construct the GNews URL
+      // 1. Fetch News
       const gnewsUrl = `https://gnews.io/api/v4/search?q=${currency}+AND+(currency+OR+economy)&lang=en&max=5&sortby=publishedAt&apikey=${GNEWS_KEY}`;
-      
-      // 2. Wrap it in corsproxy.io to bypass GitHub Pages CORS restriction
       const newsResponse = await fetch(`https://corsproxy.io/?${encodeURIComponent(gnewsUrl)}`);
       
-      if (!newsResponse.ok) throw new Error("GNews API Error via Proxy");
+      if (!newsResponse.ok) throw new Error("GNews API Error");
       const newsData = await newsResponse.json();
-      
+
       if (!newsData.articles || newsData.articles.length === 0) {
         return { sentiment: 'Neutral', summary: 'No recent news found to analyze.', articles: [] };
       }
 
-      const headlines = newsData.articles.map(a => `- ${a.title}`).join('\n');
+      // 2. Perform Enhanced Local Analysis
+      const sentiment = new Sentiment();
+      let totalScore = 0;
+      let allPositiveWords = [];
+      let allNegativeWords = [];
 
-      // B. Call Gemini (New SDK)
-      const genAI = new GoogleGenerativeAI(GEMINI_KEY);
-      
-      const prompt = `
-        Act as a financial analyst. Analyze these news headlines for the ${currency} currency:
-        ${headlines}
+      newsData.articles.forEach(article => {
+        const text = `${article.title} ${article.description}`;
+        const result = sentiment.analyze(text);
         
-        Provide a JSON response with:
-        1. "sentiment": One word (Bullish, Bearish, or Neutral).
-        2. "summary": A 2-sentence explanation of the trends affecting the currency.
-        Do not use markdown formatting. Return raw JSON.
-      `;
+        totalScore += result.score;
+        
+        // Collect the specific words that triggered the score
+        if (result.positive) allPositiveWords.push(...result.positive);
+        if (result.negative) allNegativeWords.push(...result.negative);
+      });
 
-      // Get the model
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-      
-      // Generate content
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text(); 
-      
-      // Clean up the JSON string
-      const jsonText = text.replace(/```json|```/g, '').trim();
-      const analysis = JSON.parse(jsonText);
+      // Helper to get unique top words (prevents repeating 'gain, gain, gain')
+      const getTopWords = (words) => {
+         const unique = [...new Set(words)];
+         return unique.slice(0, 3).join("', '"); // Get top 3 unique words
+      };
+
+      // 3. Determine Label & Construct Dynamic Summary
+      let sentimentLabel = 'Neutral';
+      let explanation = "Market signals appear mixed with no strong directional indicators in the headlines.";
+
+      if (totalScore > 0) {
+        sentimentLabel = 'Bullish';
+        const words = getTopWords(allPositiveWords);
+        if (words) {
+            explanation = `Positive sentiment is being driven by mentions of keywords such as '${words}' in recent coverage.`;
+        } else {
+            explanation = "General news coverage is positive, though specific key drivers were varied.";
+        }
+      } 
+      else if (totalScore < 0) {
+        sentimentLabel = 'Bearish';
+        const words = getTopWords(allNegativeWords);
+        if (words) {
+            explanation = `Negative sentiment is weighing on the market, highlighted by terms like '${words}'.`;
+        } else {
+            explanation = "Recent headlines indicate downward pressure or uncertainty in the market.";
+        }
+      }
+
+      const summary = `Analysis of ${newsData.articles.length} recent articles suggests a ${sentimentLabel} trend (Score: ${totalScore}). ${explanation}`;
 
       const finalResult = {
-        ...analysis,
+        sentiment: sentimentLabel,
+        summary: summary,
         articles: newsData.articles
       };
 
@@ -243,7 +258,7 @@ export function CurrencyDataProvider({ children }) {
       return finalResult;
 
     } catch (error) {
-      console.error("AI Analysis failed:", error);
+      console.error("Analysis failed:", error);
       return { sentiment: 'Unavailable', summary: 'Could not generate analysis at this time.' };
     }
   }, [aiCache]);
